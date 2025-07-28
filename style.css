@@ -1,0 +1,74 @@
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: radial-gradient(ellipse at bottom, #1b2735, #090a0f);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  
+  .space-app {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .app-title {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    background: linear-gradient(90deg, #ffd700, #ff8c00, #ffffff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+  
+  @keyframes glow {
+    from { text-shadow: 0 0 10px #ffe066; }
+    to { text-shadow: 0 0 20px #fff; }
+  }
+  
+  .planet-card {
+    width: 320px;
+    height: 240px;
+    margin: 0 auto;
+    padding: 1.5rem;
+    border-radius: 20px;
+    transition: background-color 0.5s ease, transform 0.3s ease;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+  
+  .planet-name {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+  
+  .planet-weather {
+    font-size: 1.1rem;
+    font-style: italic;
+  }
+  
+  .nav-buttons {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+  }
+  
+  .nav-btn {
+    background: #ffffff22;
+    color: white;
+    border: 2px solid white;
+    padding: 0.6rem 1.4rem;
+    border-radius: 30px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+  
+  .nav-btn:hover {
+    background: #ffffff44;
+    transform: scale(1.05);
+  }
+  

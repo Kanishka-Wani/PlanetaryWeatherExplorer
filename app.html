@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HelioCast - Planetary Weather</title>
+<style>
+  :root {
+    --main-gold: #ffd700;
+    --main-orange: #ff9a00;
+    --main-bg: rgba(27, 39, 53, 0.85);
+    --orbit-glow: #ffd70044;
+    --orbit-glow-strong: #ffd70077;
+    --planet-shadow: #ffd70044;
+    --planet-shadow-strong: #ffd70099;
+    --container-radius: 18px;
+    --transition-fast: 0.3s cubic-bezier(.4,2,.6,1);
+    --transition-slow: 0.7s cubic-bezier(.4,2,.6,1);
+  }
+  html, body {
+    margin: 0; padding: 0; min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #f0e9e1;
+    background: url('images/n.jpg') no-repeat center center fixed;
+    background-size: cover;
+    position: relative;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(20,30,40,0.7);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* Solar System Animation */
+  .solar-system-animation {
+    position: relative;
+    width: min(350px, 90vw);
+    height: min(350px, 90vw);
+    margin: 40px auto 20px auto;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: width var(--transition-slow), height var(--transition-slow);
+  }
+  .solar-system-animation .sun {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 48px; height: 48px;
+    margin: -24px 0 0 -24px;
+    background: radial-gradient(circle at 60% 40%, var(--main-gold) 80%, var(--main-orange) 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 40px 15px #ffd70088, 0 0 80px 20px #ff9a0080;
+    z-index: 10;
+    animation: sun-glow 4s ease-in-out infinite alternate;
+    transition: box-shadow var(--transition-slow);
+  }
+  @keyframes sun-glow {
+    0% { box-shadow: 0 0 40px 15px #ffd70088, 0 0 80px 20px #ff9a0080;}
+    100% { box-shadow: 0 0 60px 25px #ffd700cc, 0 0 120px 40px #ff9a00cc;}
+  }
+  .solar-system-animation .orbit {
+    position: absolute;
+    top: 50%; left: 50%;
+    border: 1.5px dashed rgba(255,255,255,0.18);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: border-color var(--transition-fast);
+  }
+  .solar-system-animation .planet {
+    position: absolute;
+    top: 50%; left: 100%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    box-shadow: 0 0 8px 2px #fff5;
+    animation: planet-spin 6s linear infinite;
+    transition: box-shadow var(--transition-fast), background var(--transition-fast);
+  }
+  @keyframes planet-spin { 100% { filter: brightness(1.1) drop-shadow(0 0 8px var(--planet-shadow-strong)); } }
+  .orbit.mercury { width: 70px; height: 70px; animation: orbit-mercury 2.4s linear infinite; }
+  .planet.mercury { width: 9px; height: 9px; background: #b1b1b1; }
+  .orbit.venus { width: 100px; height: 100px; animation: orbit-venus 6.1s linear infinite; }
+  .planet.venus { width: 13px; height: 13px; background: #e8c97a; }
+  .orbit.earth { width: 130px; height: 130px; animation: orbit-earth 10s linear infinite; }
+  .planet.earth { width: 15px; height: 15px; background: linear-gradient(135deg, #3fa9f5 70%, #7ed957 100%); }
+  .orbit.mars { width: 160px; height: 160px; animation: orbit-mars 18.7s linear infinite; }
+  .planet.mars { width: 12px; height: 12px; background: #c1440e; }
+  .orbit.jupiter { width: 200px; height: 200px; animation: orbit-jupiter 25s linear infinite; }
+  .planet.jupiter { width: 22px; height: 22px; background: #f5e2c5; }
+  .orbit.saturn { width: 240px; height: 240px; animation: orbit-saturn 30s linear infinite; }
+  .planet.saturn { width: 19px; height: 19px; background: #e3c97a; border: 2px solid #f5e2c5;}
+  .orbit.uranus { width: 275px; height: 275px; animation: orbit-uranus 36s linear infinite; }
+  .planet.uranus { width: 14px; height: 14px; background: #7ed6f7; }
+  .orbit.neptune { width: 310px; height: 310px; animation: orbit-neptune 42s linear infinite; }
+  .planet.neptune { width: 14px; height: 14px; background: #4763c7; }
+  @keyframes orbit-mercury { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+  @keyframes orbit-venus   { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+  @keyframes orbit-earth   { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+  @keyframes orbit-mars    { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+  @keyframes orbit-jupiter { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+  @keyframes orbit-saturn  { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+  @keyframes orbit-uranus  { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+  @keyframes orbit-neptune { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+
+  /* Dynamic revolving planet (below) */
+  .planet-revolve-container {
+    width: min(160px, 48vw);
+    height: min(160px, 48vw);
+    margin: 0 auto 1.5rem auto;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    animation: popin 0.8s;
+    will-change: transform, opacity;
+    transition: width var(--transition-fast), height var(--transition-fast);
+  }
+  @keyframes popin {
+    0% { transform: scale(0.7); opacity: 0; }
+    80% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  .planet-revolve-sun {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 44px; height: 44px;
+    margin: -22px 0 0 -22px;
+    background: radial-gradient(circle at 60% 40%, var(--main-gold) 80%, var(--main-orange) 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 30px 10px #ffd70088, 0 0 60px 20px #ff9a0080;
+    z-index: 10;
+    animation: sun-glow 4s ease-in-out infinite alternate;
+    transition: box-shadow var(--transition-slow);
+  }
+  .planet-revolve-orbit {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 120px; height: 120px;
+    margin: -60px 0 0 -60px;
+    border: 1.5px dashed rgba(255,255,255,0.22);
+    border-radius: 50%;
+    z-index: 1;
+    animation: orbit-glow 4s ease-in-out infinite alternate;
+    transition: border-color var(--transition-fast);
+  }
+  @keyframes orbit-glow {
+    0% { box-shadow: 0 0 0px var(--orbit-glow); }
+    100% { box-shadow: 0 0 18px var(--orbit-glow-strong); }
+  }
+  .planet-revolve-img {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 0 16px var(--planet-shadow);
+    border: 2px solid var(--planet-shadow);
+    background: rgba(255,255,255,0.06);
+    transform: translate(-50%, -50%) translate(60px, 0);
+    animation: planet-revolve 5s linear infinite;
+    z-index: 5;
+    transition: box-shadow var(--transition-fast), background var(--transition-fast), border var(--transition-fast);
+    will-change: transform, box-shadow;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .planet-spin {
+    animation: planet-spin-img 2.5s linear infinite, planet-revolve 5s linear infinite;
+  }
+  @keyframes planet-revolve {
+    100% { transform: translate(-50%, -50%) rotate(360deg) translate(60px, 0) rotate(-360deg);}
+  }
+  @keyframes planet-spin-img {
+    100% { filter: brightness(1.1) drop-shadow(0 0 12px var(--planet-shadow-strong)); }
+  }
+  .planet-revolve-img-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    animation: planet-spin-img 2.5s linear infinite;
+    transition: filter var(--transition-fast);
+  }
+  .planet-revolve-img.sun {
+    animation: sun-glow 4s ease-in-out infinite alternate, planet-spin-img 2.5s linear infinite;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 40px 15px #ffd70088, 0 0 80px 20px #ff9a0080;
+    background: radial-gradient(circle at 60% 40%, var(--main-gold) 80%, var(--main-orange) 100%);
+    border: none;
+    width: 70px; height: 70px;
+    display: block;
+  }
+
+  .container {
+    background: var(--main-bg);
+    padding: 2rem 3rem;
+    border-radius: var(--container-radius);
+    box-shadow: 0 8px 32px #000a;
+    margin: 0 auto 2rem auto;
+    max-width: 400px;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    transition: background var(--transition-fast), box-shadow var(--transition-fast);
+    will-change: background, box-shadow;
+  }
+  h2 {
+    color: var(--main-gold);
+    margin-bottom: 1.2rem;
+    text-shadow: 0 0 8px #ffd70099;
+    letter-spacing: 1.5px;
+    font-size: 2.1rem;
+    transition: color var(--transition-fast);
+  }
+  input[type="text"] {
+    padding: 0.7rem 1rem;
+    border-radius: 30px;
+    border: none;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    width: 80%;
+    outline: none;
+    box-shadow: 0 2px 8px #0002;
+    background: #232b38;
+    color: #ffd700;
+    transition: box-shadow var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
+  }
+  input[type="text"]:focus {
+    box-shadow: 0 0 0 2px var(--main-gold);
+    background: #232b38cc;
+    color: #fffbe7;
+  }
+  .btn {
+    background: linear-gradient(45deg, var(--main-orange), var(--main-gold));
+    color: #1b2735;
+    border: none;
+    padding: 0.7rem 2.2rem;
+    font-size: 1.1rem;
+    border-radius: 40px;
+    cursor: pointer;
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(255, 180, 0, 0.6);
+    margin-top: 0.5rem;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+    will-change: transform, box-shadow;
+  }
+  .btn:hover, .btn:focus {
+    transform: scale(1.08);
+    box-shadow: 0 8px 20px rgba(255, 220, 0, 0.9);
+    background: linear-gradient(60deg, var(--main-gold), var(--main-orange));
+  }
+  .result {
+    margin-top: 2rem;
+    background: rgba(255,255,255,0.10);
+    border-radius: 12px;
+    padding: 1.2rem;
+    color: #fffbe7;
+    box-shadow: 0 2px 8px #0002;
+    opacity: 0;
+    animation: fadeInResult 0.7s 0.2s cubic-bezier(.4,2,.6,1) forwards;
+    will-change: opacity;
+  }
+  @keyframes fadeInResult {
+    0% { opacity: 0; transform: translateY(30px);}
+    100% { opacity: 1; transform: translateY(0);}
+  }
+  .error {
+    color: #ff6b6b;
+    margin-top: 1rem;
+    font-weight: 600;
+    opacity: 0;
+    animation: fadeInResult 0.6s 0.1s cubic-bezier(.4,2,.6,1) forwards;
+  }
+  a {
+    color: var(--main-gold);
+    text-decoration: underline;
+    margin-top: 2rem;
+    display: inline-block;
+    transition: color var(--transition-fast);
+  }
+  a:hover, a:focus {
+    color: #ffe066;
+  }
+  /* Responsive */
+  @media (max-width: 700px) {
+    .solar-system-animation {
+      width: 98vw;
+      height: 240px;
+      min-width: 0;
+      min-height: 0;
+      margin-bottom: 0;
+    }
+    .container {
+      padding: 1rem 0.5rem;
+      max-width: 98vw;
+    }
+    .planet-revolve-container {
+      width: 98vw;
+      height: 100px;
+    }
+    .planet-revolve-img {
+      width: 40px; height: 40px;
+    }
+    .planet-revolve-img.sun {
+      width: 50px; height: 50px;
+    }
+    h2 { font-size: 1.4rem; }
+  }
+  @media (max-width: 400px) {
+    .container {
+      padding: 0.5rem 0.1rem;
+    }
+    .result {
+      font-size: 0.97rem;
+      padding: 0.7rem;
+    }
+    .solar-system-animation {
+      height: 140px;
+    }
+  }
+</style>
+</head>
+<body>
+  <!-- Animated Solar System Centered -->
+  <div class="solar-system-animation" aria-label="Solar System Animation">
+    <div class="sun"></div>
+    <div class="orbit mercury"><div class="planet mercury"></div></div>
+    <div class="orbit venus"><div class="planet venus"></div></div>
+    <div class="orbit earth"><div class="planet earth"></div></div>
+    <div class="orbit mars"><div class="planet mars"></div></div>
+    <div class="orbit jupiter"><div class="planet jupiter"></div></div>
+    <div class="orbit saturn"><div class="planet saturn"></div></div>
+    <div class="orbit uranus"><div class="planet uranus"></div></div>
+    <div class="orbit neptune"><div class="planet neptune"></div></div>
+  </div>
+  <div class="container">
+    <h2>Planetary Weather Explorer</h2>
+    <p style="transition: color var(--transition-fast);">Enter a planet name (e.g., <span style="color:var(--main-gold)">Mars</span>, <span style="color:var(--main-gold)">Jupiter</span>):</p>
+    <input type="text" id="planetInput" placeholder="Planet Name" autocomplete="off" aria-label="Planet Name" />
+    <br>
+    <button class="btn" id="submitBtn">Show Weather</button>
+    <div id="output" aria-live="polite"></div>
+    <a href="index.html">&larr; Back to Landing Page</a>
+  </div>
+<script>
+const planetData = {
+  mercury: {
+    image: "https://upload.wikimedia.org/wikipedia/commons/4/4a/Mercury_in_true_color.jpg",
+    atmosphere: "Very thin exosphere: mostly oxygen, sodium, hydrogen, helium, potassium. No stable atmosphere.",
+    temperature: "Day: 430°C (800°F), Night: -180°C (-290°F)",
+    storms: "No storms due to lack of atmosphere.",
+    effect: "Minimal direct effect on Earth. Mercury's lack of atmosphere means it's highly exposed to solar wind, but this does not affect Earth."
+  },
+  venus: {
+    image: "https://upload.wikimedia.org/wikipedia/commons/e/e5/Venus-real_color.jpg",
+    atmosphere: "Dense CO₂ (96%), thick sulfuric acid clouds, surface pressure 92x Earth.",
+    temperature: "Surface: ~465°C (869°F), hottest planet.",
+    storms: "Permanent hurricane-like super-rotation and acid clouds; no classic storms.",
+    effect: "Venus helps scientists understand greenhouse effects. No direct effect on Earth, but serves as a cautionary example of runaway climate change."
+  },
+  earth: {
+    image: "https://upload.wikimedia.org/wikipedia/commons/9/97/The_Earth_seen_from_Apollo_17.jpg",
+    atmosphere: "78% nitrogen, 21% oxygen, trace gases (CO₂, argon, etc.), supports life.",
+    temperature: "Average: 15°C (59°F), varies by region and season.",
+    storms: "Thunderstorms, hurricanes, tornadoes, blizzards, etc. are common.",
+    effect: "Earth's atmosphere protects us from harmful solar radiation and moderates temperature, making life possible."
+  },
+  mars: {
+    image: "https://upload.wikimedia.org/wikipedia/commons/0/02/OSIRIS_Mars_true_color.jpg",
+    atmosphere: "Thin CO₂ (95%), nitrogen, argon, very little oxygen.",
+    temperature: "Average: -60°C (-80°F), can range from 20°C (68°F) to -125°C (-195°F).",
+    storms: "Frequent dust storms, sometimes planet-wide.",
+    effect: "Martian dust storms and atmospheric escape help scientists understand planetary climate loss. No direct effect on Earth."
+  },
+  jupiter: {
+    image: "https://upload.wikimedia.org/wikipedia/commons/e/e2/Jupiter.jpg",
+    atmosphere: "Hydrogen (90%), helium (10%), traces of methane, ammonia, water vapor.",
+    temperature: "Cloud tops: -145°C (-230°F).",
+    storms: "Great Red Spot (giant storm for 300+ years), many other storms and cyclones.",
+    effect: "Jupiter's strong magnetic field and gravity help shield Earth from some comets and asteroids."
+  },
+  saturn: {
+    image: "https://upload.wikimedia.org/wikipedia/commons/c/c7/Saturn_during_Equinox.jpg",
+    atmosphere: "Hydrogen (96%), helium (3%), traces of methane, ammonia, ethane.",
+    temperature: "Cloud tops: -178°C (-288°F).",
+    storms: "Hexagonal storm at north pole, periodic massive storms.",
+    effect: "Like Jupiter, Saturn's gravity helps divert some space debris from the inner solar system."
+  },
+  uranus: {
+    image: "https://upload.wikimedia.org/wikipedia/commons/3/3d/Uranus2.jpg",
+    atmosphere: "Hydrogen (83%), helium (15%), methane (2%).",
+    temperature: "Cloud tops: -224°C (-371°F), coldest planet.",
+    storms: "Occasional methane cloud storms, but generally calm.",
+    effect: "No direct effect on Earth, but helps in comparative planetology and understanding atmospheric chemistry."
+  },
+  neptune: {
+    image: "https://upload.wikimedia.org/wikipedia/commons/5/56/Neptune_Full.jpg",
+    atmosphere: "Hydrogen (80%), helium (19%), methane (1%).",
+    temperature: "Cloud tops: -218°C (-360°F).",
+    storms: "Great Dark Spot (giant storm), fastest winds in solar system.",
+    effect: "No direct effect on Earth, but Neptune's storms and winds provide insight into atmospheric dynamics."
+  },
+  sun: {
+    image: "https://upload.wikimedia.org/wikipedia/commons/c/c3/Solar_sys8.jpg",
+    atmosphere: "Photosphere, chromosphere, corona. Mainly hydrogen and helium.",
+    temperature: "Surface: ~5,500°C (9,932°F), Core: ~15 million °C.",
+    storms: "Solar flares, coronal mass ejections (CMEs), sunspots.",
+    effect: "Solar activity (flares, coronal mass ejections) can disrupt Earth's satellites, power grids, and auroras."
+  }
+};
+
+function getPlanetDisplayName(name) {
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+function showPlanetResult(input) {
+  const outputDiv = document.getElementById('output');
+  outputDiv.innerHTML = '';
+  if (planetData[input]) {
+    let planetImageHtml = '';
+    if (input === 'sun') {
+      planetImageHtml = `
+        <div class="planet-revolve-container">
+          <img class="planet-revolve-img sun planet-spin" src="${planetData[input].image}" alt="${input} image" />
+        </div>
+      `;
+    } else {
+      planetImageHtml = `
+        <div class="planet-revolve-container">
+          <div class="planet-revolve-sun"></div>
+          <div class="planet-revolve-orbit"></div>
+          <div class="planet-revolve-img planet-spin">
+            <img class="planet-revolve-img-inner" src="${planetData[input].image}" alt="${input} image" />
+          </div>
+        </div>
+      `;
+    }
+    outputDiv.innerHTML = `
+      ${planetImageHtml}
+      <div class="result">
+        <h3 style="color:var(--main-gold);">${getPlanetDisplayName(input)}</h3>
+        <strong>Atmospheric Conditions:</strong><br>
+        ${planetData[input].atmosphere}
+        <br><br>
+        <strong>Temperature Conditions:</strong><br>
+        ${planetData[input].temperature}
+        <br><br>
+        <strong>Storm Possibility:</strong><br>
+        ${planetData[input].storms}
+        <br><br>
+        <strong>Effect on Earth:</strong><br>
+        ${planetData[input].effect}
+      </div>
+    `;
+  } else {
+    outputDiv.innerHTML = `<div class="error">Invalid planet name. Please enter one of: Sun, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune.</div>`;
+  }
+}
+
+document.getElementById('submitBtn').addEventListener('click', () => {
+  const input = document.getElementById('planetInput').value.trim().toLowerCase();
+  showPlanetResult(input);
+  // Smooth scroll to result on mobile
+  if(window.innerWidth < 700) {
+    setTimeout(() => {
+      document.getElementById('output').scrollIntoView({behavior: "smooth", block: "center"});
+    }, 200);
+  }
+});
+
+document.getElementById('planetInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    document.getElementById('submitBtn').click();
+  }
+});
+
+// Subtle input focus effect
+document.getElementById('planetInput').addEventListener('focus', function() {
+  this.select();
+});
+</script>
+</body>
+</html>

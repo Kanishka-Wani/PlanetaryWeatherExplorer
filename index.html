@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HelioCast - Landing Page</title>
+<style>
+  body, html {
+    margin: 0; padding: 0; height: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #f0e9e1;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    z-index: 0;
+  }
+
+  /* Blurred background image layer */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: url('images/a.jpg') no-repeat center center fixed;
+    background-size: cover;
+    filter: blur(5px);  /* Reduced blur here */
+    z-index: -1;
+    transform: scale(1.05); /* to prevent edges showing */
+  }
+
+  .title {
+    font-size: 5rem;
+    font-weight: 900;
+    letter-spacing: 4px;
+    margin-bottom: 0.5rem;
+    color: #ffd700;
+    text-shadow:
+      0 0 8px #ffd700,
+      0 0 15px #ffae00,
+      0 0 20px #ffae00,
+      0 0 3px #8cff00;
+    animation: flicker 3s infinite alternate;
+  }
+  @keyframes flicker {
+    0%, 100% {opacity: 1;}
+    50% {opacity: 0.7;}
+  }
+  .subtitle {
+    font-size: 1.8rem;
+    max-width: 650px;
+    margin-bottom: 3rem;
+    font-weight: 600;
+    color: #f5f5dccc;
+    text-shadow: 0 0 5px #00000099;
+  }
+  .btn {
+    background: linear-gradient(45deg, #ff9a00, #ffd700);
+    color: #1b2735;
+    border: none;
+    padding: 1rem 3rem;
+    font-size: 1.3rem;
+    border-radius: 40px;
+    cursor: pointer;
+    font-weight: 700;
+    box-shadow:
+      0 4px 15px rgba(255, 180, 0, 0.6);
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+    margin: 0 1rem;
+  }
+  .btn:hover {
+    transform: scale(1.1);
+    box-shadow:
+      0 8px 20px rgba(255, 220, 0, 0.9);
+  }
+  footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    padding: 1rem 0;
+    background: rgba(27, 39, 53, 0.7);
+    font-size: 1rem;
+    font-weight: 500;
+    color: #ddd;
+    text-shadow: 0 0 5px #000;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+  <h1 class="title">HelioCast</h1>
+  <p class="subtitle">
+    Experience Planetary Weather from the Sun to Neptune.<br>
+    Explore solar storms, temperature variations, and atmospheres of all planets.
+  </p>
+
+  <div>
+    <button class="btn" id="launchAppBtn">Launch App</button>
+    <button class="btn" id="aboutBtn">About</button>
+  </div>
+
+  <footer>
+    &copy; 2025 HelioCast. Your gateway to space weather exploration.
+  </footer>
+
+<script>
+  document.getElementById('launchAppBtn').addEventListener('click', () => {
+    window.location.href = 'app.html';  // Open the app page
+  });
+
+  document.getElementById('aboutBtn').addEventListener('click', () => {
+    alert('HelioCast provides real-time space weather data across all planets, including solar flares, temperatures, and atmospheric conditions.');
+  });
+</script>
+</body>
+</html>
